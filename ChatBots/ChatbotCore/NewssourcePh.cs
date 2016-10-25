@@ -7,7 +7,7 @@ namespace ChatbotCore
 {
     public class NewssourcePh : INews
     {
-        private string Url = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
+        private string Url = "https://api.nytimes.com/svc/topstories/v2/technology.json";
         private string urlParameters = "?api_key=2d06abfd57704a438e619fd975066fb8";
 
         private class DataObject
