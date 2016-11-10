@@ -7,7 +7,7 @@ namespace ConsoleChatBot
     {
         static void Main(string[] args)
         {
-           INews newsAggre = new NewssourcePh();
+           INews newsAggre = new NYTimes();
            IChatbot chatbot = new ConsoleChatbot(newsAggre);
 
             while (true)

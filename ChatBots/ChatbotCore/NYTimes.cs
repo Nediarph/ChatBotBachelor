@@ -5,20 +5,11 @@ using System.Net.Http.Headers;
 
 namespace ChatbotCore
 {
-    public class NewssourcePh : INews
+    public class NYTimes : INews
     {
         private string Url = "https://api.nytimes.com/svc/topstories/v2/technology.json";
         private string urlParameters = "?api_key=2d06abfd57704a438e619fd975066fb8";
 
-        private class DataObject
-        {
-            public string web_url { get; set; }
-
-            public class headline
-            {
-                public string main { get; set; }
-            }
-        }
         public string getNews()
         {
             //Code gotten from: http://stackoverflow.com/questions/9620278/how-do-i-make-calls-to-a-rest-api-using-c

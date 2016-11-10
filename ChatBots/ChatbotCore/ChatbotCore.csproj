@@ -46,7 +46,7 @@
   <ItemGroup>
     <Compile Include="ConsoleChatbot.cs" />
     <Compile Include="IChatbot.cs" />
-    <Compile Include="NewssourcePh.cs" />
+    <Compile Include="NYTimes.cs" />
     <Compile Include="INews.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
