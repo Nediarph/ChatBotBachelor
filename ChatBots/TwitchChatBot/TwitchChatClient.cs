@@ -1,10 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
 using System.Threading;
+using ChatbotCore;
 using IrcDotNet;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace TwitchChatBot
 {
-    public class TwitchChatClient
+
+    //Code from https://github.com/IrcDotNet/IrcDotNet/blob/develop/samples/IrcDotNet.Samples.TwitchChat/Program.cs
+    public class TwitchChatClient : IChatbot
     {
         private string username = "nediarph";
         private string password = "oauth:4rf96d7d5aqfcye59qqswf9yr3m9b7";
@@ -13,15 +22,40 @@ namespace TwitchChatBot
 
         private TwitchIrcClient client;
 
+        private INews newsSource;
+
+        private ObservableCollection<string> msgQueue;
+        private List<string> cmdList;
 
 
-        public TwitchChatClient()
+        public TwitchChatClient(INews news)
         {
             client = new TwitchIrcClient();
+            newsSource = news;
             client.FloodPreventer = new IrcStandardFloodPreventer(4, 2000);
             client.Disconnected += IrcClient_Disconnected;
             client.Registered += IrcClient_Registered;
+            
+            msgQueue = new ObservableCollection<string>();
+            cmdList = new List<string>();
+            cmdList.Add("!news");
 
+            msgQueue.CollectionChanged += delegate (object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+            {
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+                {
+                    var tmp = msgQueue.First();
+                    msgQueue.RemoveAt(0);
+
+                    RecognizeCmd(tmp);
+                }
+            };
+            
+        }
+
+        public void SendMessage(string msg)
+        {
+            client.SendRawMessage(msg);
         }
 
         public void Connect()
@@ -65,6 +99,13 @@ namespace TwitchChatBot
             return client.IsRegistered;
         }
 
+        ~TwitchChatClient()
+        {
+            client.Disconnect();
+        }
+
+        #region Eventhandlers
+
         private void IrcClient_Disconnected(object sender, EventArgs e)
         {
            
@@ -78,13 +119,6 @@ namespace TwitchChatBot
             client.LocalUser.JoinedChannel += IrcClient_LocalUser_JoinedChannel;
             client.LocalUser.LeftChannel += IrcClient_LocalUser_LeftChannel;
         }
-
-        ~TwitchChatClient()
-        {
-            client.Disconnect();
-        }
-
-        #region Eventhandlers
 
 
         private void IrcClient_LocalUser_LeftChannel(object sender, IrcChannelEventArgs e)
@@ -131,12 +165,20 @@ namespace TwitchChatBot
             Console.WriteLine("[{0}] Notice: {1}.", channel.Name, e.Text);
         }
 
+
+        //Crux of the use: This is event that gets fired when a message is received from the channel.
         private void IrcClient_Channel_MessageReceived(object sender, IrcMessageEventArgs e)
         {
             var channel = (IrcChannel)sender;
             if (e.Source is IrcUser)
             {
                 // Read message.
+                foreach (var cmd in cmdList)
+                {
+                    if (e.Text.Contains(cmd))
+                        msgQueue.Add(e.Text);
+                        
+                }
                 Console.WriteLine("[{0}]({1}): {2}", channel.Name, e.Source.Name, e.Text);
             }
             else
@@ -144,7 +186,7 @@ namespace TwitchChatBot
                 Console.WriteLine("[{0}]({1}) Message: {2}.", channel.Name, e.Source.Name, e.Text);
             }
         }
-
+        
         private void IrcClient_LocalUser_MessageReceived(object sender, IrcMessageEventArgs e)
         {
             var localUser = (IrcLocalUser)sender;
@@ -166,6 +208,34 @@ namespace TwitchChatBot
         }
         #endregion
 
+        public void RecognizeCmd(string cmdString)
+        {
+            if (cmdString.Contains("!news"))
+                Respond(CreateResponse(newsSource.getNews()));
+        }
 
+        public string CreateResponse(string newsString)
+        {
+            var responseObj = JsonConvert.DeserializeObject<JObject>(newsString);
+            var resultsList = responseObj["results"].Children();
+            var responseBuilder = new StringBuilder();
+            int count = 1;
+            foreach (var newsItem in resultsList)
+            {
+                responseBuilder.Append(count + ".: " + newsItem["title"] + Environment.NewLine);
+                responseBuilder.Append("Abstract: " + newsItem["abstract"] + Environment.NewLine);
+                responseBuilder.Append("Read More: " + newsItem["url"] + Environment.NewLine);
+                count++;
+                if (count > 5)
+                    break;
+            }
+
+            return responseBuilder.ToString();
+        }
+
+        public void Respond(string responseString)
+        {
+            SendMessage(responseString);
+        }
     }
 }

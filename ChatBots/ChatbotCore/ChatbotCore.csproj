@@ -44,7 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConsoleChatbot.cs" />
+    <Compile Include="IChat.cs" />
     <Compile Include="IChatbot.cs" />
     <Compile Include="NYTimes.cs" />
     <Compile Include="INews.cs" />

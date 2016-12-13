@@ -1,4 +1,5 @@
 ﻿using System;
+using ChatbotCore;
 using IrcDotNet;
 
 namespace TwitchChatBot
@@ -9,7 +10,8 @@ namespace TwitchChatBot
         //Code based on sample from here: https://github.com/IrcDotNet/IrcDotNet/blob/develop/samples/IrcDotNet.Samples.TwitchChat/Program.cs
         static void Main(string[] args)
         {
-            var chatClient = new TwitchChatClient();
+            var nytimes = new NYTimes();
+            var chatClient = new TwitchChatClient(nytimes);
             chatClient.Connect();
 
             Console.ReadKey();
