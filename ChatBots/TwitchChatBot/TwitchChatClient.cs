@@ -110,19 +110,18 @@ namespace TwitchChatBot
         {
            
         }
-
         private void IrcClient_Registered(object sender, EventArgs e)
         {
+            //from sample
 
             client.LocalUser.NoticeReceived += IrcClient_LocalUser_NoticeReceived;
             client.LocalUser.MessageReceived += IrcClient_LocalUser_MessageReceived;
             client.LocalUser.JoinedChannel += IrcClient_LocalUser_JoinedChannel;
             client.LocalUser.LeftChannel += IrcClient_LocalUser_LeftChannel;
         }
-
-
         private void IrcClient_LocalUser_LeftChannel(object sender, IrcChannelEventArgs e)
         {
+            //from sample
             var localUser = (IrcLocalUser)sender;
 
             e.Channel.UserJoined -= IrcClient_Channel_UserJoined;
@@ -132,9 +131,9 @@ namespace TwitchChatBot
 
             Console.WriteLine("You left the channel {0}.", e.Channel.Name);
         }
-
         private void IrcClient_LocalUser_JoinedChannel(object sender, IrcChannelEventArgs e)
         {
+            //from sample
             var localUser = (IrcLocalUser)sender;
 
             e.Channel.UserJoined += IrcClient_Channel_UserJoined;
@@ -144,28 +143,25 @@ namespace TwitchChatBot
 
             Console.WriteLine("You joined the channel {0}.", e.Channel.Name);
         }
-
-
         private void IrcClient_Channel_UserLeft(object sender, IrcChannelUserEventArgs e)
         {
-            var channel = (IrcChannel)sender;
-            Console.WriteLine("[{0}] User {1} left the channel.", channel.Name, e.ChannelUser.User.NickName);
+            //From sample
+            //var channel = (IrcChannel)sender;
+            //Console.WriteLine("[{0}] User {1} left the channel.", channel.Name, e.ChannelUser.User.NickName);
         }
-
         private void IrcClient_Channel_UserJoined(object sender, IrcChannelUserEventArgs e)
         {
-            var channel = (IrcChannel)sender;
-            Console.WriteLine("[{0}] User {1} joined the channel.", channel.Name, e.ChannelUser.User.NickName);
+            //From sample
+            //var channel = (IrcChannel)sender;
+            //Console.WriteLine("[{0}] User {1} joined the channel.", channel.Name, e.ChannelUser.User.NickName);
         }
-
         private void IrcClient_Channel_NoticeReceived(object sender, IrcMessageEventArgs e)
         {
-            var channel = (IrcChannel)sender;
+            //from sample
+            //var channel = (IrcChannel)sender;
 
-            Console.WriteLine("[{0}] Notice: {1}.", channel.Name, e.Text);
+            //Console.WriteLine("[{0}] Notice: {1}.", channel.Name, e.Text);
         }
-
-
         //Crux of the use: This is event that gets fired when a message is received from the channel.
         private void IrcClient_Channel_MessageReceived(object sender, IrcMessageEventArgs e)
         {
@@ -173,6 +169,7 @@ namespace TwitchChatBot
             if (e.Source is IrcUser)
             {
                 // Read message.
+                //Check if cmd is recognized
                 foreach (var cmd in cmdList)
                 {
                     if (e.Text.Contains(cmd))
@@ -186,28 +183,31 @@ namespace TwitchChatBot
                 Console.WriteLine("[{0}]({1}) Message: {2}.", channel.Name, e.Source.Name, e.Text);
             }
         }
-        
         private void IrcClient_LocalUser_MessageReceived(object sender, IrcMessageEventArgs e)
         {
-            var localUser = (IrcLocalUser)sender;
 
-            if (e.Source is IrcUser)
-            {
-                // Read message.
-                Console.WriteLine("({0}): {1}.", e.Source.Name, e.Text);
-            }
-            else
-            {
-                Console.WriteLine("({0}) Message: {1}.", e.Source.Name, e.Text);
-            }
+            //from sample
+            //var localUser = (IrcLocalUser)sender;
+
+            //if (e.Source is IrcUser)
+            //{
+            //    // Read message.
+            //    Console.WriteLine("({0}): {1}.", e.Source.Name, e.Text);
+            //}
+            //else
+            //{
+            //    Console.WriteLine("({0}) Message: {1}.", e.Source.Name, e.Text);
+            //}
         }
         private void IrcClient_LocalUser_NoticeReceived(object sender, IrcMessageEventArgs e)
         {
-            var localUser = (IrcLocalUser)sender;
-            Console.WriteLine("Notice: {0}.", e.Text);
+            //from sample
+            //var localUser = (IrcLocalUser)sender;
+            //Console.WriteLine("Notice: {0}.", e.Text);
         }
         #endregion
-
+ 
+ 
         public void RecognizeCmd(string cmdString)
         {
             if (cmdString.Contains("!news"))
@@ -219,17 +219,23 @@ namespace TwitchChatBot
             var responseObj = JsonConvert.DeserializeObject<JObject>(newsString);
             var resultsList = responseObj["results"].Children();
             var responseBuilder = new StringBuilder();
+
+
+            responseBuilder.Append("PRIVMSG #nediarph :");
             int count = 1;
+
+            //For Twitch chat we have a character limit of 500 for each message. As such we are limiting it to the first news story.
+            //THis is based on IRC protocol: https://tools.ietf.org/html/rfc2812.html#section-2.3
             foreach (var newsItem in resultsList)
             {
-                responseBuilder.Append(count + ".: " + newsItem["title"] + Environment.NewLine);
-                responseBuilder.Append("Abstract: " + newsItem["abstract"] + Environment.NewLine);
-                responseBuilder.Append("Read More: " + newsItem["url"] + Environment.NewLine);
+                responseBuilder.Append(count + ".: " + newsItem["title"]+ "... ");
+                responseBuilder.Append("Abstract: " + newsItem["abstract"] + "... ");
+                responseBuilder.Append("Read More: " + newsItem["url"] + "... ");
                 count++;
-                if (count > 5)
+                if (count > 1)
                     break;
             }
-
+            Console.WriteLine(responseBuilder.Length);
             return responseBuilder.ToString();
         }
 
